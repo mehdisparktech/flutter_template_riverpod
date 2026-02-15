@@ -39,7 +39,7 @@ Future<void> main() async {
   //   options: DefaultFirebaseOptions.currentPlatform,
   // );
 
-  /// Run the `CinnamonRiverpodTemplateApp` app
+  /// Run the `RiverpodTemplateApp` app
   runApp(
     ProviderScope(
       observers: [ProvidersLogger()],
