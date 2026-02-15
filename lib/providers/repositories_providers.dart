@@ -6,7 +6,7 @@ import 'services_providers.dart';
 
 final movieRepositoryProvider = Provider<HttpMovieRepository>(
   (ref) => HttpMovieRepository(
-    api: ref.read(dioServiceProvider),
+    api: ref.read(movieClientProvider),
     locale: ref.read(localeProvider),
   ),
 );

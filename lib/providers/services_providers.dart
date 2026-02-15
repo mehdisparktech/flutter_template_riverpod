@@ -9,6 +9,7 @@ import '../services/location/location_plugin_service.dart';
 import '../services/logger/logger_service.dart';
 import '../services/storage/hive_storage_service.dart';
 import '../services/storage/storage_service.dart';
+import '../services/api/movie_client.dart';
 
 final loggerServiceProvider = Provider<LoggerService>((ref) => LoggerService());
 
@@ -25,3 +26,8 @@ final geolocatorServiceProvider = Provider<GeolocatorPluginService>(
 final locationServiceProvider = Provider<LocationPluginService>(
   (ref) => LocationPluginService(ref.watch(loggerServiceProvider)),
 );
+
+final movieClientProvider = Provider<MovieClient>((ref) {
+  final dioService = ref.read(dioServiceProvider);
+  return MovieClient(dioService.dio);
+});

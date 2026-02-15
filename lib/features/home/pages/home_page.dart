@@ -4,9 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import '../../../models/api_error/api_error.dart';
-import '../../../models/movie/movie.dart';
 import '../../../theme/theme.dart';
-import '../controllers/home_controller.dart';
+import '../controllers/home_notifier.dart';
+import '../controllers/home_state.dart';
 import '../widgets/movie_widget.dart';
 
 class HomePage extends ConsumerWidget {
@@ -14,7 +14,8 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final movieListValue = ref.watch(homeControllerProvider);
+    final homeState = ref.watch(homeNotifierProvider);
+    
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -28,15 +29,15 @@ class HomePage extends ConsumerWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           child: Center(
-            child: movieListValue.when(
-              data: (movies) => HomePageContents(data: movies),
+            child: homeState.when(
+              data: (data) => HomePageContents(state: data),
               loading: () => const Center(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation(AppColors.secondary),
                 ),
               ),
               error: (e, __) => Text(
-                (e as ApiError).message,
+                e is ApiError ? e.message : e.toString(),
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bold,
               ),
@@ -50,11 +51,11 @@ class HomePage extends ConsumerWidget {
 
 class HomePageContents extends ConsumerWidget {
   const HomePageContents({
-    required this.data,
+    required this.state,
     super.key,
   });
 
-  final List<Movie> data;
+  final HomeState state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => RefreshIndicator(
@@ -62,78 +63,76 @@ class HomePageContents extends ConsumerWidget {
         backgroundColor: AppColors.white,
         color: AppColors.primary,
         triggerMode: RefreshIndicatorTriggerMode.anywhere,
-        onRefresh: ref.read(homeControllerProvider.notifier).getMovies,
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              const PaginationWidget(),
-              AnimationLimiter(
-                child: GridView.builder(
-                  physics: const ScrollPhysics(),
-                  shrinkWrap: true,
-                  padding: const EdgeInsets.all(20),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3,
-                    mainAxisSpacing: 20,
-                    crossAxisSpacing: 10,
-                    mainAxisExtent: 180,
-                  ),
-                  itemCount: data.length,
-                  itemBuilder: (context, index) =>
-                      AnimationConfiguration.staggeredGrid(
+        onRefresh: () => ref.read(homeNotifierProvider.notifier).refresh(),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            const SliverToBoxAdapter(
+              child: SizedBox(height: 10),
+            ),
+            SliverToBoxAdapter(
+              child: PaginationWidget(state: state),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.all(20),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 20,
+                  crossAxisSpacing: 10,
+                  mainAxisExtent: 180,
+                ),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => AnimationConfiguration.staggeredGrid(
                     position: index,
                     duration: const Duration(milliseconds: 375),
                     columnCount: 3,
                     child: ScaleAnimation(
                       child: FadeInAnimation(
-                        child: MovieWidget(movie: data[index]),
+                        child: MovieWidget(movie: state.movies[index]),
                       ),
                     ),
                   ),
+                  childCount: state.movies.length,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       );
 }
 
 class PaginationWidget extends ConsumerWidget {
-  const PaginationWidget({super.key});
+  const PaginationWidget({
+    required this.state,
+    super.key,
+  });
+
+  final HomeState state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) => Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Opacity(
-            opacity: ref.watch(currentPageProvider) == 1 ? 0.2 : 1,
+            opacity: state.page == 1 ? 0.2 : 1,
             child: IconButton(
               onPressed: () {
-                if (ref.read(currentPageProvider) == 1) {
-                  return;
+                if (state.page > 1) {
+                  ref.read(homeNotifierProvider.notifier).setPage(state.page - 1);
                 }
-                ref.read(currentPageProvider.notifier).state--;
-                ref.read(homeControllerProvider.notifier).getMovies();
               },
               icon: const Icon(Icons.chevron_left),
             ),
           ),
-          Text(
-              '${ref.watch(currentPageProvider)} ... ${ref.watch(totalPagesProvider)}'),
+          Text('${state.page} ... ${state.totalPages}'),
           Opacity(
-            opacity:
-                ref.watch(currentPageProvider) == ref.watch(totalPagesProvider)
-                    ? 0.2
-                    : 1,
+            opacity: state.page == state.totalPages ? 0.2 : 1,
             child: IconButton(
               onPressed: () {
-                if (ref.read(currentPageProvider) ==
-                    ref.read(totalPagesProvider)) {
-                  return;
+                if (state.page < state.totalPages) {
+                  ref.read(homeNotifierProvider.notifier).setPage(state.page + 1);
                 }
-                ref.read(currentPageProvider.notifier).state++;
-                ref.read(homeControllerProvider.notifier).getMovies();
               },
               icon: const Icon(Icons.chevron_right),
             ),

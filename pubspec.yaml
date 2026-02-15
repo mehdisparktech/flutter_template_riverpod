@@ -59,6 +59,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
   shimmer: ^3.0.0
+  retrofit: '4.6.0'
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +75,7 @@ dev_dependencies:
   riverpod_generator: ^2.6.3
   freezed: ^2.5.7
   json_serializable: ^6.9.0
+  retrofit_generator: ^9.6.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
