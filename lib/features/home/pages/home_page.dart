@@ -15,7 +15,7 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final homeState = ref.watch(homeNotifierProvider);
-    
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -119,7 +119,9 @@ class PaginationWidget extends ConsumerWidget {
             child: IconButton(
               onPressed: () {
                 if (state.page > 1) {
-                  ref.read(homeNotifierProvider.notifier).setPage(state.page - 1);
+                  ref
+                      .read(homeNotifierProvider.notifier)
+                      .setPage(state.page - 1);
                 }
               },
               icon: const Icon(Icons.chevron_left),
@@ -131,7 +133,9 @@ class PaginationWidget extends ConsumerWidget {
             child: IconButton(
               onPressed: () {
                 if (state.page < state.totalPages) {
-                  ref.read(homeNotifierProvider.notifier).setPage(state.page + 1);
+                  ref
+                      .read(homeNotifierProvider.notifier)
+                      .setPage(state.page + 1);
                 }
               },
               icon: const Icon(Icons.chevron_right),
